@@ -29,10 +29,10 @@ To build, ensure that you have `gcc` installed and access to the CUDA SDK includ
 make libsmctrl.a
 ```
 
-If you see an error that the command `nvcc` was not found, `nvcc` is not available on your `PATH`.
-Correct this error by explictly specifying the location of `nvcc` to `make`, e.g.:
+If you see errors about CUDA headers or libraries not being found, your CUDA installation may be in a non-standard location.
+Correct this error by explictly specifying the location of the CUDA install `make`, e.g.:
 ```
-make NVCC=/playpen/jbakita/CUDA/cuda-archive/cuda-10.2/bin/nvcc libsmctrl.a
+make CUDA=/playpen/jbakita/CUDA/cuda-archive/cuda-10.2/ libsmctrl.a
 ```
 
 For binary backwards-compatibility to old versions of the NVIDIA GPU driver, we recommend building with an old version of the CUDA SDK.
@@ -41,7 +41,7 @@ For example, by building against CUDA 10.2, the binary will be compatible with a
 Older versions of `nvcc` may require you to use an older version of `g++`.
 This can be explictly specified via the `CXX` variable, e.g.:
 ```
-make NVCC=/playpen/jbakita/CUDA/cuda-archive/cuda-8.0/bin/nvcc CXX=g++-5 libsmctrl.a
+make CUDA=/playpen/jbakita/CUDA/cuda-archive/cuda-8.0/ CXX=g++-5 libsmctrl.a
 ```
 
 `libsmctrl` supports being built as a shared library.
