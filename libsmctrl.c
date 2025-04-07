@@ -1,5 +1,5 @@
 /**
- * Copyright 2022-2024 Joshua Bakita
+ * Copyright 2022-2025 Joshua Bakita
  * Library to control SM masks on CUDA launches. Co-opts preexisting debug
  * logic in the CUDA driver library, and thus requires a build with -lcuda.
  *
@@ -10,7 +10,7 @@
  *   +-----------+---------------+---------------+--------------+
  *   |  Version  |  Global Mask  |  Stream Mask  |  Next Mask   |
  *   +-----------+---------------+---------------+--------------+
- *   | 8.0-12.6  | TMD/QMD Hook  | stream struct | TMD/QMD Hook |
+ *   | 8.0-12.8  | TMD/QMD Hook  | stream struct | TMD/QMD Hook |
  *   | 6.5-7.5   | TMD/QMD Hook  | N/A           | TMD/QMD Hook |
  *   +-----------+---------------+---------------+--------------+
  * "N/A" indicates that a mask type is unsupported on that CUDA version.
@@ -204,6 +204,10 @@ void libsmctrl_set_next_mask(uint64_t mask) {
 // CUDA 12.5 and 12.6 use the same offset
 // 12.5 tested on 555.58.02
 // 12.6 tested on 560.35.03
+#define CU_12_7_MASK_OFF 0x4fc
+// CUDA 12.7 and 12.8 use the same offset
+// 12.7 tested on 565.77
+// 12.8 tested on 570.124.06
 
 // Offsets for the stream struct on Jetson aarch64
 #define CU_9_0_MASK_OFF_JETSON 0x128
@@ -333,6 +337,10 @@ void libsmctrl_set_stream_mask_ext(void* stream, uint128_t mask) {
 	case 12050:
 	case 12060:
 		hw_mask_v2 = (void*)(stream_struct_base + CU_12_5_MASK_OFF);
+		break;
+	case 12070:
+	case 12080:
+		hw_mask_v2 = (void*)(stream_struct_base + CU_12_7_MASK_OFF);
 		break;
 #elif __aarch64__
 	case 9000: {
