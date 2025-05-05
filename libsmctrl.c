@@ -119,10 +119,23 @@ static void setup_sm_control_callback() {
 	int (*enable)(uint32_t enable, uint32_t hndl, int domain, int cbid);
 	uintptr_t* tbl_base;
 	uint32_t my_hndl;
-	// Avoid race conditions (setup can only be called once)
+	// Avoid race conditions (setup should only run once)
 	if (__atomic_test_and_set(&sm_control_setup_called, __ATOMIC_SEQ_CST))
 		return;
 
+#if CUDA_VERSION <= 6050
+	// Verify supported CUDA version
+	// It's impossible for us to run with a version of CUDA older than we were
+	// built by, so this check is excluded if built with CUDA > 6.5.
+	int ver = 0;
+	cuDriverGetVersion(&ver);
+	if (ver < 6050)
+		abort(1, ENOSYS, "Global or next masking requires at least CUDA 6.5; "
+		                 "this application is using CUDA %d.%d",
+		                 ver / 1000, (ver % 100));
+#endif
+
+	// Set up callback
 	cuGetExportTable((const void**)&tbl_base, &callback_funcs_id);
 	uintptr_t subscribe_func_addr = *(tbl_base + 3);
 	uintptr_t enable_func_addr = *(tbl_base + 6);
@@ -139,31 +152,13 @@ static void setup_sm_control_callback() {
 
 // Set default mask for all launches
 void libsmctrl_set_global_mask(uint64_t mask) {
-	if (!sm_control_setup_called) {
-		// The version will not change while running, so only check once
-		int ver = 0;
-		cuDriverGetVersion(&ver);
-		if (ver < 6050)
-			abort(1, ENOSYS, "Global masking requires at least CUDA 6.5; "
-			                 "this application is using CUDA %d.%d",
-			                 ver / 1000, (ver % 100));
-		setup_sm_control_callback();
-	}
+	setup_sm_control_callback();
 	g_sm_mask = mask;
 }
 
 // Set mask for next launch from this thread
 void libsmctrl_set_next_mask(uint64_t mask) {
-	if (!sm_control_setup_called) {
-		// The version will not change while running, so only check once
-		int ver = 0;
-		cuDriverGetVersion(&ver);
-		if (ver < 6050)
-			abort(1, ENOSYS, "Next masking requires at least CUDA 6.5; "
-			                 "this application is using CUDA %d.%d",
-			                 ver / 1000, (ver % 100));
-		setup_sm_control_callback();
-	}
+	setup_sm_control_callback();
 	g_next_sm_mask = mask;
 }
 
