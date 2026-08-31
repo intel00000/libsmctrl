@@ -10,6 +10,7 @@
  *   +-----------+---------------+---------------+--------------+
  *   |  Version  |  Global Mask  |  Stream Mask  |  Next Mask   |
  *   +-----------+---------------+---------------+--------------+
+ *   | 13.3      | TMD/QMD Hook  | stream struct | TMD/QMD Hook |
  *   | 8.0-12.8  | TMD/QMD Hook  | stream struct | TMD/QMD Hook |
  *   | 6.5-7.5   | TMD/QMD Hook  | N/A           | TMD/QMD Hook |
  *   +-----------+---------------+---------------+--------------+
@@ -31,6 +32,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #include "libsmctrl.h"
@@ -203,6 +205,8 @@ void libsmctrl_set_next_mask(uint64_t mask) {
 // CUDA 12.7 and 12.8 use the same offset
 // 12.7 tested on 565.77
 // 12.8 tested on 570.124.06
+#define CU_13_3_MASK_OFF 0x5fc
+// 13.3 tested on 610.57.04
 
 // Offsets for the stream struct on Jetson aarch64
 #define CU_9_0_MASK_OFF_JETSON 0x128
@@ -336,6 +340,9 @@ void libsmctrl_set_stream_mask_ext(void* stream, uint128_t mask) {
 	case 12070:
 	case 12080:
 		hw_mask_v2 = (void*)(stream_struct_base + CU_12_7_MASK_OFF);
+		break;
+	case 13030:
+		hw_mask_v2 = (void*)(stream_struct_base + CU_13_3_MASK_OFF);
 		break;
 #elif __aarch64__
 	case 9000: {
