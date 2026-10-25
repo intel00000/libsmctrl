@@ -270,15 +270,15 @@ int detect_parker_soc() {
 // Should work for CUDA 8.0 through 12.6
 // A cudaStream_t is a CUstream*. We use void* to avoid a cuda.h dependency in
 // our header
-void libsmctrl_set_stream_mask(void* stream, uint64_t mask) {
+int libsmctrl_set_stream_mask(void* stream, uint64_t mask) {
 	// When the old API is used on GPUs with over 64 TPCs, disable all TPCs >64
 	uint128_t full_mask = -1;
 	full_mask <<= 64;
 	full_mask |= mask;
-	libsmctrl_set_stream_mask_ext(stream, full_mask);
+	return libsmctrl_set_stream_mask_ext(stream, full_mask);
 }
 
-void libsmctrl_set_stream_mask_ext(void* stream, uint128_t mask) {
+int libsmctrl_set_stream_mask_ext(void* stream, uint128_t mask) {
 	char* stream_struct_base = *(char**)stream;
 	struct stream_sm_mask* hw_mask = NULL;
 	struct stream_sm_mask_v2* hw_mask_v2 = NULL;
@@ -416,6 +416,7 @@ void libsmctrl_set_stream_mask_ext(void* stream, uint128_t mask) {
 		abort(1, 0, "Stream masking unsupported on this CUDA version (%d), and"
 		            " no fallback MASK_OFF set!", ver);
 	}
+	return 0;
 }
 
 /* INFORMATIONAL FUNCTIONS */
